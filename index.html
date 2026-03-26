@@ -479,9 +479,9 @@ function checkWinCondition(){
   let reason = '';
   
   // 三浦武将の撃破チェック
-  const miuraCmd = units.find(u=>u.type==='commander'&&u.team===1);
-  if(!miuraCmd || miuraCmd.hp <= 0){
-    winner = 0; reason = "三浦武将（三浦義明）を討ち取った！";
+  const miuraCmds = units.filter(u=>u.type==='commander'&&u.team===1&&u.hp>0);
+  if(miuraCmds.length === 0){
+    winner = 0; reason = "三浦軍の全武将を討ち取った！";
   }
   
   // 秩父による横須賀到達チェック (生存している秩父軍ユニットがYタイルにいるか)
@@ -494,9 +494,9 @@ function checkWinCondition(){
   
   // 秩父武将の撃破チェック
   if(winner===-1){
-    const chichibuCmd = units.find(u=>u.type==='commander'&&u.team===0);
-    if(!chichibuCmd || chichibuCmd.hp <= 0){
-      winner = 1; reason = "秩父武将（畠山重忠）を退けた！";
+    const chichibuCmds = units.filter(u=>u.type==='commander'&&u.team===0&&u.hp>0);
+    if(chichibuCmds.length === 0){
+      winner = 1; reason = "秩父軍の全武将を退けた！";
     }
   }
   
