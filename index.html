@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>衣笠山合戦戦術シミュレーター</title>
 <meta name="google-site-verification" content="ID1mhyaQ1N0YNNMkojTbDW1CpNSxfgLWDO0jakDtTaU" />
 <meta name="description" content="衣笠山合戦を舞台にした本格戦術シミュレーター。歴史の追体験を楽しもう！">
+<title>衣笠山合戦戦術シミュレーター</title>
 <link rel="icon" href="favicon.png">
 <style>
 /* 共通リセット・ベース全体 */
@@ -160,7 +160,7 @@ const UT={
   archer:{name:'弓兵',k:'弓',hp:2,atk:1,range:2,energy:2},
   cavalry:{name:'騎兵',k:'騎',hp:6,atk:3,range:1,energy:2},
   commander:{name:'武将',k:'将',hp:8,atk:4,range:1,energy:2},
-  abatis:{name:'逆茂木',k:'柵',hp:5,atk:0,range:0,energy:0,st:1},
+  abatis:{name:'逆茂木',k:'逆',hp:5,atk:0,range:0,energy:0,st:1},
   turret:{name:'櫓',k:'櫓',hp:999,atk:0,range:0,energy:0,st:1},
 };
 const INIT_MAP=[
@@ -169,7 +169,7 @@ const INIT_MAP=[
   ['R','P','P','P','P','P','P','G','G','M','M','M','M','M','M','M','M','G','P','G','G','M','M','M','M'],
   ['R','P','P','P','P','P','P','G','M','M','G','G','M','M','G','G','G','P','P','G','M','M','M','M','G'],
   ['P','R','R','R','P','P','P','P','G','G','G','G','M','M','M','G','P','P','P','G','M','M','M','M','G'],
-  ['P','P','P','R','P','P','P','P','G','G','P','G','G','G','G','P','P','P','P','M','M','M','M','M','G'],
+  ['P','P','P','B','P','P','P','P','G','G','P','G','G','G','G','P','P','P','P','M','M','M','M','M','G'],
   ['P','P','P','P','R','P','P','P','B','R','R','P','P','P','P','P','P','P','G','M','M','G','M','G','G'],
   ['P','P','P','P','R','R','R','R','P','P','R','R','R','P','P','P','P','G','G','G','G','G','M','G','G'],
   ['G','P','P','G','P','P','P','P','B','P','P','P','P','R','P','P','P','P','G','G','G','G','G','G','P'],
@@ -275,8 +275,8 @@ function loadDefaultUnits(){
   units=[
     mk('commander',0,2,10),mk('infantry',0,2,8),mk('infantry',0,3,8),mk('infantry',0,4,8),
     mk('archer',0,0,7),mk('archer',0,1,7),mk('cavalry',0,7,11),mk('cavalry',0,8,11),
-    mk('commander',1,23,9),mk('infantry',1,22,10),mk('infantry',1,23,10),mk('infantry',1,24,10),
-    mk('archer',1,23,8),mk('archer',1,24,8),mk('turret',1,21,7),mk('abatis',1,19,8),mk('abatis',1,18,9),
+    mk('commander',1,19,9),mk('infantry',1,18,10),mk('infantry',1,19,10),mk('infantry',1,20,10),
+    mk('archer',1,19,8),mk('archer',1,20,8),mk('turret',1,17,7),mk('abatis',1,15,8),mk('abatis',1,14,9),
   ];
 }
 function initGameData(){
@@ -650,8 +650,16 @@ function drawUnit(u){
   const canAct=!pastMode&&!isGameOver&&!u.atked&&!u.st&&u.team===cTeam&&u.hp>0&&u.rem>0;
   
   if(canAct){const glow=.12+.1*Math.sin(animT/350);ctx.beginPath();ctx.arc(cx,cy,SZ*.7,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${glow})`;ctx.fill()}
-  ctx.beginPath();ctx.arc(cx,cy,SZ*.5,0,Math.PI*2);ctx.fillStyle=tc;ctx.fill();
-  ctx.strokeStyle=isSel?'#ffd700':canAct?'#fff':'#555';ctx.lineWidth=isSel?2.5:1.5;ctx.stroke();
+  
+  const s = SZ*0.5;
+  if(u.st){
+    ctx.fillStyle=tc; ctx.fillRect(cx-s, cy-s, s*2, s*2);
+    ctx.strokeStyle=isSel?'#ffd700':canAct?'#fff':'#555'; ctx.lineWidth=isSel?2.5:1.5;
+    ctx.strokeRect(cx-s, cy-s, s*2, s*2);
+  } else {
+    ctx.beginPath();ctx.arc(cx,cy,s,0,Math.PI*2);ctx.fillStyle=tc;ctx.fill();
+    ctx.strokeStyle=isSel?'#ffd700':canAct?'#fff':'#555'; ctx.lineWidth=isSel?2.5:1.5; ctx.stroke();
+  }
   ctx.fillStyle='#fff';ctx.font=`bold ${SZ*.65}px 'Noto Sans JP',sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t.k,cx,cy+1);
   if(u.type!=='turret'){const bw=SZ*.75,bh=3,bx=cx-bw/2,by=cy+SZ*.5+2,ra=u.hp/u.maxHp;ctx.fillStyle='#222';ctx.fillRect(bx,by,bw,bh);ctx.fillStyle=ra>.5?'#2ecc71':ra>.25?'#f39c12':'#e74c3c';ctx.fillRect(bx,by,bw*ra,bh)}
   if(u.atked&&u.team===cTeam&&!pastMode){ctx.beginPath();ctx.arc(cx,cy,SZ*.5,0,Math.PI*2);ctx.fillStyle='rgba(0,0,0,.4)';ctx.fill()}
@@ -668,7 +676,12 @@ document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='z'&&
 function gameClick(c,r){
   if(selUnit){
     const tgt=atkTargets.find(t=>t.col===c&&t.row===r);
-    if(tgt){doAtk(selUnit,tgt);desel();dirty=true;return}
+    if(tgt){
+      const u = selUnit;
+      doAtk(u,tgt);
+      if(hitAndAway && u.rem > 0.01 && !isGameOver) sel(u); else desel();
+      dirty=true; return;
+    }
     if(moveRange.has(`${c},${r}`)){doMove(selUnit,c,r);dirty=true;return}
     desel();
   }
@@ -678,6 +691,10 @@ function gameClick(c,r){
 function updInfo(c,r){const t=TERRAIN[MAP[r][c]];$('ip-coord').textContent=`(${c},${r})`;$('ip-terrain').innerHTML=`<span class="chip" style="background:${t.color}"></span>${t.name}`;const u=uAt(c,r)||sAt(c,r);if(u&&u.hp>0){$('ip-unit').innerHTML=`<span style="color:${TC[u.team]};font-weight:700">${UT[u.type].name}</span>`;$('ip-hp').textContent=u.type==='turret'?'∞':`${u.hp}/${u.maxHp}`;$('ip-atk').textContent=u.atk+(cmdAura(u)?' (x2)':'');$('ip-energy').textContent=u.st?'—':u.rem.toFixed(1)}else{['ip-unit','ip-hp','ip-atk','ip-energy'].forEach(id=>$(id).textContent='—')}}
 
 // ===== AI =====
+function isLastStand(team){
+  const cmds = units.filter(u=>u.type==='commander'&&u.team===team&&u.hp>0);
+  return (cmds.length === 1 && cmds[0].hp <= 4);
+}
 function toggleAI(t){isAI[t]=!isAI[t];const b=$(`ai-btn-${t}`);b.textContent=`${TN[t].replace('軍','')}: ${isAI[t]?'CPU':'人間'}`;b.classList.toggle('active',isAI[t]);if(isAI[t]&&t===cTeam&&!aiRunning&&!isGameOver&&!pastMode)setTimeout(runAI,400)}
 function delay(ms){return new Promise(r=>setTimeout(r,ms))}
 async function runAI(){
@@ -705,11 +722,31 @@ async function aiAct(u,team){
   if(team===0)await aiAttacker(u,mr,at); else await aiDefender(u,mr,at);
 }
 async function aiAttacker(u,mr,at){
-  if(at.length>0){const tgt=at.find(t=>t.type==='abatis')||at.sort((a,b)=>a.hp-b.hp)[0];doAtk(u,tgt);dirty=true;await delay(aiDelayMs[animSpeed]);return}
+  if(at.length>0){
+    const tgt=at.find(t=>t.type==='abatis')||at.sort((a,b)=>a.hp-b.hp)[0];
+    doAtk(u,tgt); dirty=true; await delay(aiDelayMs[animSpeed]);
+    if(hitAndAway && u.rem > 0.01 && !isGameOver){
+      mr = calcMove(u);
+      if(mr.size>0){
+        const goal=findGoalAtk(u); const mv=findClosestMove(u,mr,goal);
+        if(mv){ doMove(u,mv.c,mv.r); dirty=true; await delay(aiDelayMs[animSpeed]); }
+      }
+    }
+    return;
+  }
   if(mr.size>0){
     const best=findBestMoveAtk(u,mr);
     if(best.move){u.fromCol=u.col;u.fromRow=u.row;u.col=best.move.c;u.row=best.move.r;u.moveT=(animSpeed===0?0:1.0);u.rem=Math.max(0,u.rem-costTo(u,best.move.c,best.move.r));dirty=true;await delay(aiDelayMs[animSpeed]);checkWinCondition();if(isGameOver)return;
-      at=calcAtk(u);if(at.length>0){const tgt=at.find(t=>t.type==='abatis')||at[0];doAtk(u,tgt);dirty=true;return}
+      at=calcAtk(u);if(at.length>0){const tgt=at.find(t=>t.type==='abatis')||at[0];doAtk(u,tgt);dirty=true;
+        if(hitAndAway && u.rem > 0.01 && !isGameOver){
+          mr = calcMove(u);
+          if(mr.size>0){
+            const goal=findGoalAtk(u); const mv=findClosestMove(u,mr,goal);
+            if(mv){ doMove(u,mv.c,mv.r); dirty=true; await delay(aiDelayMs[animSpeed]); }
+          }
+        }
+        return;
+      }
     }
     if(!u.atked&&mr.size>0){
       const goal=findGoalAtk(u);const mv=findClosestMove(u,mr,goal);
@@ -721,27 +758,63 @@ function findBestMoveAtk(u,mr){let bm=null,bp=-1;for(const k of mr){const[c,r]=k
 function findGoalAtk(u){const ecmd=units.find(x=>x.type==='commander'&&x.team!==u.team&&x.hp>0);let bd=1e9,g=null;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(MAP[r][c]==='Y'){const d=hDist(u.col,u.row,c,r);if(d<bd){bd=d;g={c,r}}}if(ecmd){const d=hDist(u.col,u.row,ecmd.col,ecmd.row);if(d<bd)g={c:ecmd.col,r:ecmd.row}}return g||{c:20,r:8}}
 
 async function aiDefender(u,mr,at){
+  const ls = isLastStand(u.team);
   at=at.filter(t=>!(t.st&&t.team===u.team));
-  if(at.length>0){at.sort((a,b)=>distToY(a.col,a.row)-distToY(b.col,b.row));doAtk(u,at[0]);dirty=true;await delay(aiDelayMs[animSpeed]);return}
+  
+  if(at.length>0){
+    if(ls){
+      // 本陣死守モード時: 横須賀高校(Y)に近い敵を優先。または敵武将。
+      at.sort((a,b)=>{
+        if(a.type==='commander') return -1; if(b.type==='commander') return 1;
+        return distToY(a.col,a.row) - distToY(b.col,b.row);
+      });
+    } else {
+      at.sort((a,b)=>distToY(a.col,a.row)-distToY(b.col,b.row));
+    }
+    
+    doAtk(u,at[0]); dirty=true; await delay(aiDelayMs[animSpeed]);
+    
+    if(hitAndAway && u.rem > 0.01 && !isGameOver){
+      mr = calcMove(u);
+      if(mr.size>0){
+        // 敵から最も離れるマスを選ぶ (ヒット＆アウェイ撤退)
+        const mv = findSafestMove(u, mr);
+        if(mv){ doMove(u,mv.c,mv.r); dirty=true; await delay(aiDelayMs[animSpeed]); }
+      }
+    }
+    return;
+  }
   if(u.type==='archer'){
     const og=MAP[u.row][u.col]==='M'||sAt(u.col,u.row)?.type==='turret';
     if(!og&&mr.size>0){const mv=findArcherSpot(u,mr);if(mv){const c2=costTo(u,mv.c,mv.r);u.fromCol=u.col;u.fromRow=u.row;u.col=mv.c;u.row=mv.r;u.moveT=(animSpeed===0?0:1.0);u.rem=Math.max(0,u.rem-c2);logMsg(`${TN[u.team]}${UT[u.type].name}→(${mv.c},${mv.r})`);checkWinCondition();if(isGameOver)return;dirty=true;await delay(aiDelayMs[animSpeed]);at=calcAtk(u);at=at.filter(t=>!(t.st&&t.team===u.team));if(at.length>0){at.sort((a,b)=>distToY(a.col,a.row)-distToY(b.col,b.row));doAtk(u,at[0]);dirty=true}return}}
     if(og)return;
   }
+  let hy_y=-1, hx_y=-1;
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(MAP[r][c]==='Y'){hy_y=r;hx_y=c;break;}
+  
   if(mr.size>0){
-    const cmd=units.find(x=>x.type==='commander'&&x.team===u.team&&x.hp>0),enemy=findClosestEnemyToY(u.team);
-    let moved = false;
-    if(u.team===0){ // 秩父軍（防衛側）
+    if(ls && u.type === 'commander'){
+      // 本陣死守モードの武将: 本陣周辺を維持しつつ、敵から逃げる
+      let best=null, maxS=-1e9;
+      for(const k of mr){
+        const[c,r]=k.split(',').map(Number);
+        const dY = distToY(c,r);
+        const de = getMinDistToEnemy(c,r,u.team);
+        // スコア = (本陣への近さ) + (敵からの遠さ) 
+        // 平時は本陣優先(-dY*50)、敵が迫れば距離を稼ぐ(de*10)
+        const s = -dY * 50 + de * 10;
+        if(s>maxS){maxS=s; best={c,r}}
+      }
+      if(best){ doMove(u,best.c,best.r); moved=true; dirty=true; await delay(aiDelayMs[animSpeed]); }
+    } else if(u.team===0){ // 秩父軍（防衛側としての通常行動）
       const tgts=dispUnits.filter(e=>e.team===1&&e.hp>0);
       let bestPathTgt=null,minDist=1e9;
       for(const e of tgts){
         const d=pathDist(u.type,u.col,u.row,e.col,e.row);
         if(d<minDist){minDist=d;bestPathTgt=e;}
       }
-      let hy=-1,hx=-1;
-      for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(MAP[r][c]==='Y'){hy=r;hx=c;break;}
-      const dY=pathDist(u.type,u.col,u.row,hx,hy);
-      if(dY<minDist){minDist=dY;bestPathTgt={col:hx,row:hy};}
+      const dY=pathDist(u.type,u.col,u.row,hx_y,hy_y);
+      if(dY<minDist){minDist=dY;bestPathTgt={col:hx_y,row:hy_y};}
       let tgt=bestPathTgt;
       
       if(tgt){
@@ -753,8 +826,10 @@ async function aiDefender(u,mr,at){
         }
         if(bestMLoc){doMove(u,bestMLoc.c,bestMLoc.r);moved=true;dirty=true;await delay(aiDelayMs[animSpeed]);}
       }
-    } else if(enemy){
-      const mv=findDefensiveMove(u,mr,cmd,enemy);
+    } else {
+      // 三浦軍、または敵がいる場合
+      const cmd=units.find(x=>x.type==='commander'&&x.team===u.team&&x.hp>0),enemy=findClosestEnemyToY(u.team);
+      const mv=findDefensiveMove(u,mr,cmd,enemy,ls);
       if(mv){
         const c2=costTo(u,mv.c,mv.r);
         u.fromCol=u.col;u.fromRow=u.row;
@@ -766,7 +841,14 @@ async function aiDefender(u,mr,at){
         at=calcAtk(u);
         at=at.filter(t=>!(t.st&&t.team===u.team));
         if(at.length>0){
-          at.sort((a,b)=>distToY(a.col,a.row)-distToY(b.col,b.row));
+          if(ls){
+            at.sort((a,b)=>{
+              if(a.type==='commander') return -1; if(b.type==='commander') return 1;
+              return distToY(a.col,a.row) - distToY(b.col,b.row);
+            });
+          } else {
+            at.sort((a,b)=>distToY(a.col,a.row)-distToY(b.col,b.row));
+          }
           doAtk(u,at[0]);dirty=true
         }
         moved = true;
@@ -774,10 +856,53 @@ async function aiDefender(u,mr,at){
     }
   }
 }
+function getMinDistToEnemy(c,r,team){
+  const enemies = units.filter(e=>e.team!==team&&e.hp>0&&!e.st);
+  if(!enemies.length) return 100;
+  let minD = 1e9;
+  for(const e of enemies){ const d=hDist(c,r,e.col,e.row); if(d<minD)minD=d; }
+  return minD;
+}
+function findSafestMove(u, mr){
+  let best=null, maxD=-1;
+  for(const k of mr){
+    const[c,r]=k.split(',').map(Number);
+    const minE = getMinDistToEnemy(c,r,u.team);
+    if(minE>maxD){maxD=minE; best={c,r}}
+  }
+  return best;
+}
 function distToY(c,r){let m=1e9;for(let rr=0;rr<ROWS;rr++)for(let cc=0;cc<COLS;cc++)if(MAP[rr][cc]==='Y'){const d=hDist(c,r,cc,rr);if(d<m)m=d}return m}
 function findClosestEnemyToY(team){const es=units.filter(u=>u.team!==team&&!u.st&&u.hp>0);if(!es.length)return null;es.sort((a,b)=>distToY(a.col,a.row)-distToY(b.col,b.row));return es[0]}
 function findArcherSpot(u,mr){let b=null,bs=-1e9;for(const k of mr){const[c,r]=k.split(',').map(Number);const im=MAP[r][c]==='M',ht=sAt(c,r)?.type==='turret';if(!im&&!ht)continue;const cmd=units.find(x=>x.type==='commander'&&x.team===u.team&&x.hp>0),nc=cmd?hDist(c,r,cmd.col,cmd.row)<=2:true,s=(im||ht?10:0)+(nc?5:0);if(s>bs){bs=s;b={c,r}}}return b}
-function findDefensiveMove(u,mr,cmd,enemy){let b=null,bs=-1e9;for(const k of mr){const[c,r]=k.split(',').map(Number);const dc=cmd?hDist(c,r,cmd.col,cmd.row):0,de=hDist(c,r,enemy.col,enemy.row);let s=-de*2;if(cmd&&dc<=1)s+=10;if(cmd&&dc>2)s-=15;if(s>bs){bs=s;b={c,r}}}return b}
+function findDefensiveMove(u,mr,cmd,enemy,ls){
+  let b=null,bs=-1e9;
+  const enemyNearY = findClosestEnemyToY(u.team);
+  const thresholdEnemy = (enemyNearY && distToY(enemyNearY.col, enemyNearY.row) <= 3) ? enemyNearY : null;
+  
+  for(const k of mr){
+    const[c,r]=k.split(',').map(Number);
+    let s=0;
+    if(ls){
+      if(thresholdEnemy){
+        // Yの周囲3マスに敵が侵入している場合、迎撃を優先
+        const dE = hDist(c,r,thresholdEnemy.col,thresholdEnemy.row);
+        s = -dE * 20 - distToY(c,r) * 5; 
+      } else {
+        // それ以外は本陣(Y)への帰還を優先
+        s = -distToY(c,r) * 10;
+      }
+    } else {
+      const de=hDist(c,r,enemy.col,enemy.row);
+      const dc=cmd?hDist(c,r,cmd.col,cmd.row):0;
+      s = -de*2;
+      if(cmd&&dc<=1)s+=10;
+      if(cmd&&dc>2)s-=15;
+    }
+    if(s>bs){bs=s;b={c,r}}
+  }
+  return b;
+}
 function findClosestMove(u,mr,goal){if(!goal)return null;let b=null,bd=hDist(u.col,u.row,goal.c,goal.r);for(const k of mr){const[c,r]=k.split(',').map(Number);const d=hDist(c,r,goal.c,goal.r);if(d<bd){bd=d;b={c,r}}}return b}
 
 
