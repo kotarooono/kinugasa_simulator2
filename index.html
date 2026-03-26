@@ -83,6 +83,10 @@ canvas{display:block;cursor:pointer}
         <option value="3">低 (Low)</option>
       </select>
     </div>
+    <div style="margin-top:8px">
+      <label style="color:#eee;font-size:1.1rem">ヒット＆アウェイ:</label>
+      <input type="checkbox" id="hit-and-away" onchange="updHitAway()" style="width:20px;height:20px;vertical-align:middle;">
+    </div>
   </div>
 </div>
 <div id="game-ui" style="display:none; flex-direction:column; align-items:center; width:100%">
@@ -184,6 +188,7 @@ let CW,CH;
 // ===== 音声・BGM =====
 let volBGM = 0.4, volSFX = 0.6;
 let animSpeed = 2; // 0:即, 1:高, 2:中, 3:低
+let hitAndAway = false;
 const moveTDec = [1.0, 0.1, 0.05, 0.025];
 const aiDelayMs = [10, 200, 400, 800];
 
@@ -194,6 +199,9 @@ function updVol(){
 }
 function updSpeed(){
   animSpeed = parseInt($('anim-speed').value);
+}
+function updHitAway(){
+  hitAndAway = $('hit-and-away').checked;
 }
 
 const bgmAudio = new Audio(); bgmAudio.loop = true; bgmAudio.volume = volBGM;
@@ -410,14 +418,14 @@ function p2h(px,py){let m=1e9,b=null;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c
 // ===== 移動 =====
 function mCost(ut,t){if(t==='R')return-1;if(t==='M')return ut==='cavalry'?-1:2;if(t==='G')return ut==='cavalry'?2:1;if(t==='P'||t==='Y')return ut==='cavalry'?2/3:1;return 1}
 function calcMove(u){
-  if(u.atked||u.st)return new Set();
+  if((u.atked && !hitAndAway) || u.st)return new Set();
   const dist=new Map(),sk=`${u.col},${u.row}`;dist.set(sk,0);
   const pq=[{c:u.col,r:u.row,cost:0}];
   while(pq.length){pq.sort((a,b)=>a.cost-b.cost);const cur=pq.shift(),ck=`${cur.c},${cur.r}`;
     if(cur.cost>dist.get(ck)+.001)continue;
     for(const n of nb(cur.c,cur.r)){const mc=mCost(u.type,MAP[n.row][n.col]);if(mc<0)continue;
       const oc=uAt(n.col,n.row),st=sAt(n.col,n.row);
-      if(oc)continue;if(st)continue;
+      if(oc)continue; if(st && st.type !== 'turret')continue;
       const nc=cur.cost+mc;if(nc>u.rem+.001)continue;const nk=`${n.col},${n.row}`;
       if(!dist.has(nk)||nc<dist.get(nk)-.001){dist.set(nk,nc);pq.push({c:n.col,r:n.row,cost:nc})}}}
   const res=new Set();for(const[k]of dist){const[c,r]=k.split(',').map(Number);if(c===u.col&&r===u.row)continue;if(!uAt(c,r))res.add(k)}return res
@@ -428,7 +436,7 @@ function costTo(u,tc,tr){
     if(cur.cost>dist.get(ck)+.001)continue;
     for(const n of nb(cur.c,cur.r)){const mc=mCost(u.type,MAP[n.row][n.col]);if(mc<0)continue;
       const oc=uAt(n.col,n.row),st=sAt(n.col,n.row);
-      if(oc)continue;if(st)continue;
+      if(oc)continue; if(st && st.type !== 'turret')continue;
       const nc=cur.cost+mc;if(nc>u.rem+.001)continue;const nk=`${n.col},${n.row}`;
       if(!dist.has(nk)||nc<dist.get(nk)-.001){dist.set(nk,nc);pq.push({c:n.col,r:n.row,cost:nc})}}}
   return dist.get(`${tc},${tr}`)||0
@@ -453,7 +461,7 @@ function pathDist(type, sc, sr, tc, tr){
 function eRange(u){if(u.type!=='archer')return u.range;const t=MAP[u.row][u.col],onT=dispUnits.some(s=>s.type==='turret'&&s.col===u.col&&s.row===u.row&&s.team===u.team);return(t==='M'||onT)?u.range+1:u.range}
 function cmdAura(u){if(u.type==='commander')return false;const ns=nb(u.col,u.row);return dispUnits.some(x=>x.type==='commander'&&x.team===u.team&&x.hp>0&&ns.some(n=>n.col===x.col&&n.row===x.row))}
 function calcAtk(u){
-  if(u.st||u.atk===0)return[];const rng=eRange(u),br=u.range;
+  if(u.st||u.atk===0||u.atked)return[];const rng=eRange(u),br=u.range;
   return dispUnits.filter(t=>{if(t.team===u.team||t.hp<=0)return false;if(t.type==='turret')return false;
     const d=hDist(u.col,u.row,t.col,t.row);if(u.type==='archer'&&rng>br&&MAP[t.row][t.col]==='M'&&d>br)return false;return d<=rng})
 }
@@ -461,7 +469,7 @@ function doAtk(a,d){
   let atk=a.atk;const au=cmdAura(a);if(au)atk*=2;
   SFX.slash(); // 攻撃時は必ず剣撃音
   if(animSpeed !== 0) anims.push({type:'line', c1:a.col, r1:a.row, c2:d.col, r2:d.row, t:1.0});
-  if(d.type==='turret'){logMsg(`${UT[a.type].name}が櫓を攻撃→破壊不可！`);a.atked=true;a.rem=0;return}
+  if(d.type==='turret'){logMsg(`${UT[a.type].name}が櫓を攻撃→破壊不可！`);a.atked=true; if(!hitAndAway) a.rem=0; return}
   d.hp=Math.max(0,d.hp-atk);
   logMsg(`${TN[a.team]}${UT[a.type].name}→${TN[d.team]}${UT[d.type].name} ATK${atk} HP${d.hp}/${d.maxHp}`);
   d.dmgT = (animSpeed===0?0:1.0);
@@ -470,7 +478,7 @@ function doAtk(a,d){
     logMsg(`★ ${TN[d.team]}の${UT[d.type].name}が撃破！`);
     if(d.type==='abatis'){ stats.abatisDestroyed++; SFX.wood(); } else { setTimeout(()=>SFX.destroy(), 100); }
   }
-  a.atked=true;a.rem=0;
+  a.atked=true; if(!hitAndAway) a.rem=0;
   checkWinCondition();
 }
 
@@ -611,7 +619,9 @@ function drawAll(){
   if(!pastMode && hovHex)drawOv(hovHex.col,hovHex.row,'rgba(255,255,255,.1)',(gamePhase==='SETUP'&&setupTool==='terr')?'#e74c3c':'#fff');
   if(pastMode && hovHex)drawOv(hovHex.col,hovHex.row,'rgba(243,156,18,.1)','#f39c12');
   
-  for(const u of dispUnits)if(u.hp>0)drawUnit(u);
+  // 描画順: 静的ユニット(櫓・逆茂木など) -> 動的ユニット
+  for(const u of dispUnits)if(u.hp>0 && u.st)drawUnit(u);
+  for(const u of dispUnits)if(u.hp>0 && !u.st)drawUnit(u);
   
   for(let i=anims.length-1; i>=0; i--){
     const a = anims[i];
