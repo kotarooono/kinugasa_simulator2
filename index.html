@@ -463,7 +463,7 @@ function doAtk(a,d){
   d.hp=Math.max(0,d.hp-atk);
   logMsg(`${TN[a.team]}${UT[a.type].name}→${TN[d.team]}${UT[d.type].name} ATK${atk} HP${d.hp}/${d.maxHp}`);
   d.dmgT = (animSpeed===0?0:1.0);
-  if(animSpeed !== 0) anims.push({type:'dmgText', txt:`-${atk}`, c:d.col, r:d.row, t:1.0});
+  if(animSpeed !== 0) anims.push({type:'dmgText', txt:`-${atk}`, c:d.col, r:d.row, t:1.0, isBonus:au});
   if(d.hp<=0){
     logMsg(`★ ${TN[d.team]}の${UT[d.type].name}が撃破！`);
     if(d.type==='abatis'){ stats.abatisDestroyed++; SFX.wood(); } else { setTimeout(()=>SFX.destroy(), 100); }
@@ -592,6 +592,15 @@ function drawAll(){
   ctx.fillStyle='#0f1626';ctx.fillRect(0,0,CW,CH);
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)drawHex(c,r);
   
+  // 武将オーラの描画
+  for(const u of dispUnits){
+    if(u.type==='commander' && u.hp>0){
+      const aCol = u.team===0 ? 'rgba(192, 57, 43, 0.15)' : 'rgba(41, 128, 185, 0.15)';
+      const aStr = u.team===0 ? 'rgba(192, 57, 43, 0.3)' : 'rgba(41, 128, 185, 0.3)';
+      nb(u.col, u.row).forEach(n => drawOv(n.col, n.row, aCol, aStr));
+    }
+  }
+  
   if(!pastMode && selUnit){
     drawOv(selUnit.col,selUnit.row,'rgba(255,215,0,.25)','rgba(255,215,0,.8)');
     for(const k of moveRange){const[c,r]=k.split(',').map(Number);drawOv(c,r,'rgba(100,180,255,.25)','rgba(100,180,255,.6)')}
@@ -611,7 +620,9 @@ function drawAll(){
       ctx.strokeStyle=`rgba(255,200,0,${a.t})`;ctx.lineWidth=4;ctx.stroke(); dirty=true;
     } else if(a.type==='dmgText'){
       const p=hC(a.c,a.r);
-      ctx.fillStyle=`rgba(255,50,50,${a.t})`;ctx.font="bold 26px sans-serif";ctx.textAlign="center";
+      const fs = a.isBonus ? "bold 36px serif" : "bold 26px sans-serif";
+      ctx.fillStyle = a.isBonus ? `rgba(255, 215, 0, ${a.t})` : `rgba(255, 50, 50, ${a.t})`;
+      ctx.font = fs; ctx.textAlign="center";
       ctx.fillText(a.txt, p.x, p.y - 20 - (1-a.t)*30); dirty=true;
     }
   }
