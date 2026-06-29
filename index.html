@@ -7,8 +7,6 @@
 <meta name="description" content="衣笠山合戦を舞台にした本格戦術シミュレーター。歴史の追体験を楽しもう！">
 <title>衣笠山合戦戦術シミュレーター</title>
 <link rel="icon" href="favicon.png">
-<link rel="apple-touch-icon" href="favicon.png">
-<meta name="mobile-web-app-capable" content="yes">
 <style>
 /* 共通リセット・ベース全体 */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
@@ -127,8 +125,8 @@ canvas{display:block;cursor:pointer}
   <button class="btn" onclick="toggleSetupMode('terr')" id="btn-setup-terr">🖊 地形編集</button>
   <button class="btn" onclick="toggleSetupMode('unit')" id="btn-setup-unit">♟️ 部隊配置</button>
   <button class="btn" onclick="clearUnits()">一旦全消去</button>
-  <button class="btn" onclick="exportMap()" id="btn-export" style="background:#2a2a4c">📋</button>
-  <button class="btn" onclick="importMap()" id="btn-import" style="background:#2a2a4c">📥</button>
+  <button class="btn" onclick="exportMap()" id="btn-export" style="background:#2a2a4c" title="地形＋配置をコピー">📋 保存</button>
+  <button class="btn" onclick="importMap()" id="btn-import" style="background:#2a2a4c" title="地形＋配置を読込">📥 読込</button>
 </div>
 <div id="editor-bar"><span style="font-size:.7rem;color:#888;margin-right:4px">地形:</span></div>
 <div id="unit-palette">
@@ -156,7 +154,6 @@ canvas{display:block;cursor:pointer}
   <div><span class="lb">残エネ</span><br><span class="vl" id="ip-energy">—</span></div>
 </div>
 <div id="log-panel"></div>
-
 <!-- モーダル -->
 <div id="manual-modal">
   <div id="manual-inner">
@@ -164,43 +161,34 @@ canvas{display:block;cursor:pointer}
     <div style="white-space: pre-wrap; line-height: 1.6; font-size: 0.95rem;">
 ⚔️ 衣笠山合戦戦術シミュレーター 操作説明書
 本シミュレーターは、1180年に起きた「衣笠山合戦」を舞台にした、ヘックス（六角形）グリッド形式の戦術シミュレーションゲームです。
-
 1. はじめに（タイトル画面）
 ゲームを起動すると、以下の設定項目が表示されます。
-
 対戦モード選択:
 三浦軍（人間）vs 秩父軍（CPU）
 秩父軍（人間）vs 三浦軍（CPU）
 両軍手動（対人戦）
 両軍AI（観戦モード）
-
 環境設定:
 音量調整: BGMと効果音のバランスを調整できます。
 移動速度: ユニットの動く速さを「即（一瞬）」〜「低（ゆっくり）」まで4段階で選べます。
 ヒット＆アウェイ: [重要] 攻撃後、移動力が残っていれば再移動できる特殊ルールをON/OFFできます。
-
 2. セットアップフェーズ（配置・編集）
 ゲーム開始直後は「布陣」の時間です。
-
 地形編集: 左下の「地形編集」ボタンから、川を橋にしたり山を作ったりとマップを自由に改造できます。
 部隊配置: 「部隊配置」ボタンから、各陣営の兵力を自由に入れ替えられます。
 データ管理: 右側の「📋」ボタンで現在の盤面をコピー、「📥」ボタンで以前の盤面を復元できます。
 いざ勝負: 配置が完了したら赤いボタンを押して、戦闘を開始してください。
-
 3. バトルフェーズ（実戦）
 ターン制で進行し、自軍のすべてのユニットが行動を終えるか、「ターン終了」を押すと相手の番になります。
-
 🕹️ 基本操作
 選択: ユニットをクリックすると、移動可能な範囲（白）と攻撃可能な範囲（赤線）が表示されます。
 移動: 白い範囲内のマスをクリックすると移動します。
 攻撃: 敵ユニットをクリックすると攻撃を仕掛けます。
 待機: 行動させずにターンを終えたい場合は、背景か「待機」ボタンを押します。
-
 🛡️ 特殊ルール
 櫓（やぐら）ボーナス: 弓兵が「櫓」の上から攻撃する場合、射程が +1 されます。
 将軍ボーナス（オーラ）: 武田などの「将軍」の周囲1マスにいる味方は、攻撃力が 2倍 になります（ダメージ数字が金色で表示されます）。
 ヒット＆アウェイ: 特典ルールがONの場合、攻撃後も移動力が残っていれば「離脱移動」が可能です。
-
 4. ユニット・地形特性
 👥 ユニット
 歩兵 (歩): バランスの取れた基本兵科。
@@ -209,17 +197,14 @@ canvas{display:block;cursor:pointer}
 武将 (将): 極めて高い能力を持ち、周囲の味方を鼓舞します。
 逆茂木 (逆): 敵の進軍を防ぐ障害物です。破壊可能です。
 櫓 (櫓): 登ることができ、弓兵の拠点として最適です。
-
 ⛰️ 地形
 平原・草原: 標準的な移動コストです。
 山: 移動コストが高く、進軍が鈍ります。
 川: 侵入できませんが、橋のある場所なら渡河可能です。
 横須賀高校 (Y): 本陣。ここを守り抜くか、陥落させるかが鍵となります。
-
 5. 勝利条件
 敵の将軍をすべて討ち取る: 相手陣営の「将（武将）」がいなくなった時点で勝利となります。
 本陣死守（三浦軍AI）: 三浦軍は、将軍のHPが少なくなると本陣に立てこもり、必死の防衛行動をとります。
-
 歴史のIFを、あなたの手で体験してください！
     </div>
   </div>
@@ -235,7 +220,6 @@ canvas{display:block;cursor:pointer}
     </div>
   </div>
 </div>
-
 <script>
 // ===== 定数 =====
 const TN=['秩父軍','三浦軍'], TC=['#c0392b','#2980b9'];
@@ -253,19 +237,19 @@ const UT={
   turret:{name:'櫓',k:'櫓',hp:999,atk:0,range:0,energy:0,st:1},
 };
 const INIT_MAP=[
-  ['P','P','P','P','P','G','M','G','M','M','M','M','M','M','M','M','M','G','P','P','P','G','M','M','M'],
+  ['P','P','P','P','P','G','M','G','M','M','M','M','M','M','M','M','G','P','P','P','P','G','M','M','M'],
   ['P','P','P','P','P','G','G','M','M','M','M','M','M','M','M','M','G','G','P','P','G','G','M','M','M'],
   ['R','P','P','P','P','P','P','G','G','M','M','M','M','M','M','M','M','G','P','G','G','M','M','M','M'],
   ['R','P','P','P','P','P','P','G','M','M','G','G','M','M','G','G','G','P','P','G','M','M','M','M','G'],
-  ['P','R','R','R','P','P','P','P','G','G','G','G','M','M','M','G','P','P','P','G','M','M','M','M','G'],
-  ['P','P','P','B','P','P','P','P','G','G','P','G','G','G','G','P','P','P','P','M','M','M','M','M','G'],
-  ['P','P','P','P','R','P','P','P','B','R','R','P','P','P','P','P','P','P','G','M','M','G','M','G','G'],
-  ['P','P','P','P','R','R','R','R','P','P','R','R','R','P','P','P','P','G','G','G','G','G','M','G','G'],
-  ['G','P','P','G','P','P','P','P','B','P','P','P','P','R','P','P','P','P','G','G','G','G','G','G','P'],
-  ['G','G','G','G','P','P','P','R','P','P','P','P','P','B','P','P','P','P','G','G','Y','Y','P','P','P'],
-  ['G','G','G','G','G','P','P','R','G','G','P','P','P','P','R','R','P','P','G','G','Y','Y','Y','P','P'],
-  ['G','M','M','G','P','P','R','M','M','G','P','P','P','P','P','R','P','P','P','G','Y','Y','P','P','P'],
-  ['G','M','M','G','P','P','P','R','G','M','G','P','P','P','P','P','R','B','P','P','P','P','P','P','P'],
+  ['P','R','R','R','P','P','P','P','G','G','G','G','M','M','M','M','P','P','P','G','M','M','M','M','G'],
+  ['P','P','P','B','P','P','P','P','G','G','G','G','P','G','G','P','P','P','P','M','M','M','M','M','G'],
+  ['P','P','P','P','R','P','P','P','P','R','R','G','P','P','P','P','P','P','G','M','M','G','M','G','G'],
+  ['P','P','P','P','R','P','P','P','B','P','R','R','P','P','P','P','P','G','G','G','G','G','M','G','G'],
+  ['G','P','P','G','P','R','R','R','R','P','P','P','R','R','P','P','P','P','G','G','G','G','G','G','P'],
+  ['G','G','G','G','P','P','P','P','B','P','P','P','P','B','P','P','P','P','G','G','Y','Y','P','P','P'],
+  ['G','G','G','G','G','P','P','P','R','G','P','P','P','P','R','R','P','P','G','G','Y','Y','Y','P','P'],
+  ['G','M','M','G','P','P','P','R','M','G','P','P','P','P','P','R','P','P','P','G','Y','Y','P','P','P'],
+  ['G','M','M','G','P','P','P','R','M','M','G','P','P','P','P','P','R','R','P','P','P','P','P','P','P'],
   ['M','M','G','G','P','G','G','G','G','G','P','P','G','P','P','P','P','R','R','P','P','P','P','P','P'],
   ['M','M','G','G','P','P','G','G','G','G','P','P','G','G','P','P','P','P','P','R','P','P','P','P','P'],
 ];
@@ -273,14 +257,12 @@ let MAP=[], ROWS=0, COLS=0;
 const SZ=22,HW=Math.sqrt(3)*SZ,PX=HW*.6,PY=SZ*.8;
 const canvas=document.getElementById('map'),ctx=canvas.getContext('2d');
 let CW,CH;
-
 // ===== 音声・BGM =====
 let volBGM = 0.4, volSFX = 0.6;
 let animSpeed = 2; // 0:即, 1:高, 2:中, 3:低
 let hitAndAway = false;
 const moveTDec = [1.0, 0.1, 0.05, 0.025];
 const aiDelayMs = [10, 200, 400, 800];
-
 function updVol(){
   volBGM = parseFloat($('vol-bgm').value);
   volSFX = parseFloat($('vol-sfx').value);
@@ -292,14 +274,11 @@ function updSpeed(){
 function updHitAway(){
   hitAndAway = $('hit-and-away').checked;
 }
-
 const bgmAudio = new Audio(); bgmAudio.loop = true; bgmAudio.volume = volBGM;
-
 // ローカル指定ファイル用のHTML5 Audio要素（指定のない効果音は今まで通りWebAudioAPIで補完）
 const seSlash = new Audio('slash.mp3'); 
 const seFootstep = new Audio('footstep.mp3');
 const seHorse = new Audio('horse.mp3');
-
 const AC = new (window.AudioContext || window.webkitAudioContext)();
 const SFX = {
   osc: (t, f1, f2, d, v) => {
@@ -337,27 +316,22 @@ function playBGM(phase) {
   else if(phase==='BATTLE') bgmAudio.src = 'tatakainobgm.mp3';
   bgmAudio.currentTime = 0; bgmAudio.play().catch(e=>{});
 }
-
 // ===== 状態 =====
 let units=[],cTeam=0,tNum=1,selUnit=null,moveRange=new Set(),atkTargets=[];
 let hovHex=null,selTerr='P',isPaint=false,dirty=true,undoSt=[];
 let isAI=[false,false],aiRunning=false,animT=0,isGameOver=false;
 let pastMode=false, pastTurn=-1, dispUnits=[];
-
 let anims = []; // アニメーション格納用 ({type:'line'|'dmgText',...})
 let gamePhase = 'TITLE'; // TITLE, SETUP, BATTLE
 let setupTool = null; // 'terr', 'unit'
 let palTeam = 0; let palType = ''; 
 let initialIsAI = [false, false];
-
 // メモリ管理: ログとスナップショット
 let logs=[]; // {type:'msg', text:''}, {type:'turn', num:x, shotIdx:y}
 let snapshots=[]; // 盤面の完全コピーを保存
 let stats={abatisDestroyed:0};
-
 // ===== ユーティリティ =====
 function $(id){return document.getElementById(id)}
-
 // ===== 初期化とフェーズ管理 =====
 function loadDefaultUnits(){
   units=[];
@@ -493,8 +467,6 @@ function placeUnitH(c,r){
   }
   dirty=true;
 }
-
-
 // ===== Hex =====
 function hC(c,r){return{x:PX+c*HW+(r%2?HW/2:0)+HW/2,y:PY+r*SZ*1.5+SZ}}
 function hV(cx,cy){const v=[];for(let i=0;i<6;i++){const a=Math.PI/180*(60*i-30);v.push({x:cx+SZ*Math.cos(a),y:cy+SZ*Math.sin(a)})}return v}
@@ -504,7 +476,6 @@ function hDist(a,b,c,d){const p=cube(a,b),q=cube(c,d);return Math.max(Math.abs(p
 function uAt(c,r){return dispUnits.find(u=>u.col===c&&u.row===r&&!u.st&&u.hp>0)||null}
 function sAt(c,r){return dispUnits.find(u=>u.col===c&&u.row===r&&u.st&&u.hp>0)||null}
 function p2h(px,py){let m=1e9,b=null;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const{x,y}=hC(c,r);const d=(px-x)**2+(py-y)**2;if(d<m){m=d;b={col:c,row:r}}}return m>SZ*SZ?null:b}
-
 // ===== 移動 =====
 function mCost(ut,t){if(t==='R')return-1;if(t==='M')return ut==='cavalry'?-1:2;if(t==='G')return ut==='cavalry'?2:1;if(t==='P'||t==='Y')return ut==='cavalry'?2/3:1;return 1}
 function calcMove(u){
@@ -546,7 +517,6 @@ function pathDist(type, sc, sr, tc, tr){
   }
   return 1e9;
 }
-
 // ===== 戦闘 =====
 function eRange(u){if(u.type!=='archer')return u.range;const t=MAP[u.row][u.col],onT=dispUnits.some(s=>s.type==='turret'&&s.col===u.col&&s.row===u.row&&s.team===u.team);return(t==='M'||onT)?u.range+1:u.range}
 function cmdAura(u){if(u.type==='commander')return false;const ns=nb(u.col,u.row);return dispUnits.some(x=>x.type==='commander'&&x.team===u.team&&x.hp>0&&ns.some(n=>n.col===x.col&&n.row===x.row))}
@@ -571,7 +541,6 @@ function doAtk(a,d){
   a.atked=true; if(!hitAndAway) a.rem=0;
   checkWinCondition();
 }
-
 // ===== 勝利判定 =====
 function checkWinCondition(){
   if(pastMode) return;
@@ -610,7 +579,6 @@ function checkWinCondition(){
     setTimeout(()=>showReport(winner, reason), 500);
   }
 }
-
 // ===== 選択・行動 =====
 function sel(u){selUnit=u;moveRange=calcMove(u);atkTargets=calcAtk(u);$('btn-skip').style.display='';updPh('移動/攻撃を選択');dirty=true}
 function desel(){selUnit=null;moveRange=new Set();atkTargets=[];$('btn-skip').style.display='none';updPh(isGameOver?'ゲーム終了':'ユニットを選択');dirty=true}
@@ -637,7 +605,6 @@ function endTurn(){
   if(isAI[cTeam]&&!aiRunning)setTimeout(runAI,600);
 }
 function updPh(t){$('phase-info').textContent=t}
-
 // ===== メモリとログ =====
 function saveSnapshot(turn){
   // ユニット配列をディープコピーして保存
@@ -659,7 +626,6 @@ function logTurnEnd(turn, shotIdx){
 }
 function viewPast(turn, shotIdx){
   if(aiRunning) return; // CPU作動中は不可
-
   
   pastMode = true;
   pastTurn = turn;
@@ -684,7 +650,6 @@ function returnToPresent(){
   $('btn-end').disabled = isGameOver;
   dirty=true;
 }
-
 // ===== 描画 =====
 function lighten(h,p){const n=parseInt(h.replace('#',''),16);return`rgb(${Math.min(255,(n>>16)+p)},${Math.min(255,((n>>8)&0xff)+p)},${Math.min(255,(n&0xff)+p)})`}
 function gameLoop(t){animT=t;const hasActive=!pastMode&&!isGameOver&&dispUnits.some(u=>u.team===cTeam&&!u.atked&&!u.st&&u.hp>0&&u.rem>0);if(hasActive||dirty){dirty=false;drawAll()}requestAnimationFrame(gameLoop)}
@@ -754,7 +719,6 @@ function drawUnit(u){
   if(u.type!=='turret'){const bw=SZ*.75,bh=3,bx=cx-bw/2,by=cy+SZ*.5+2,ra=u.hp/u.maxHp;ctx.fillStyle='#222';ctx.fillRect(bx,by,bw,bh);ctx.fillStyle=ra>.5?'#2ecc71':ra>.25?'#f39c12':'#e74c3c';ctx.fillRect(bx,by,bw*ra,bh)}
   if(u.atked&&u.team===cTeam&&!pastMode){ctx.beginPath();ctx.arc(cx,cy,SZ*.5,0,Math.PI*2);ctx.fillStyle='rgba(0,0,0,.4)';ctx.fill()}
 }
-
 // ===== イベント =====
 function mP(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*(CW/r.width),y:(e.clientY-r.top)*(CH/r.height)}}
 canvas.addEventListener('mousemove',e=>{const p=mP(e),h=p2h(p.x,p.y);if(h&&(!hovHex||hovHex.col!==h.col||hovHex.row!==h.row)){hovHex=h;if(gamePhase==='SETUP'&&setupTool==='terr'&&isPaint&&!pastMode)paintH(h.col,h.row);dirty=true;updInfo(h.col,h.row)}else if(!h&&hovHex){hovHex=null;dirty=true}});
@@ -762,7 +726,6 @@ canvas.addEventListener('mousedown',e=>{if(e.button!==0)return;const p=mP(e),h=p
 canvas.addEventListener('mouseup',()=>{isPaint=false});canvas.addEventListener('mouseleave',()=>{isPaint=false;hovHex=null;dirty=true});
 canvas.addEventListener('contextmenu',e=>{e.preventDefault();if(gamePhase!=='SETUP'||pastMode||setupTool!=='terr')return;const p=mP(e),h=p2h(p.x,p.y);if(h){selTerr=MAP[h.row][h.col];updPal()}});
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='z'&&!pastMode&&gamePhase==='SETUP'){e.preventDefault();undoE();return}if(e.key==='Escape')desel()});
-
 function gameClick(c,r){
   if(selUnit){
     const tgt=atkTargets.find(t=>t.col===c&&t.row===r);
@@ -777,9 +740,7 @@ function gameClick(c,r){
   }
   const u=uAt(c,r);if(u&&u.team===cTeam&&!u.atked&&u.hp>0)sel(u);updInfo(c,r);dirty=true;
 }
-
 function updInfo(c,r){const t=TERRAIN[MAP[r][c]];$('ip-coord').textContent=`(${c},${r})`;$('ip-terrain').innerHTML=`<span class="chip" style="background:${t.color}"></span>${t.name}`;const u=uAt(c,r)||sAt(c,r);if(u&&u.hp>0){$('ip-unit').innerHTML=`<span style="color:${TC[u.team]};font-weight:700">${UT[u.type].name}</span>`;$('ip-hp').textContent=u.type==='turret'?'∞':`${u.hp}/${u.maxHp}`;$('ip-atk').textContent=u.atk+(cmdAura(u)?' (x2)':'');$('ip-energy').textContent=u.st?'—':u.rem.toFixed(1)}else{['ip-unit','ip-hp','ip-atk','ip-energy'].forEach(id=>$(id).textContent='—')}}
-
 // ===== AI =====
 function isLastStand(team){
   const cmds = units.filter(u=>u.type==='commander'&&u.team===team&&u.hp>0);
@@ -795,7 +756,6 @@ async function runAI(){
   const myUnits=units.filter(u=>u.team===team&&!u.st&&u.hp>0);
   const cmd=units.find(u=>u.type==='commander'&&u.team===team&&u.hp>0);
   if(team===0)myUnits.sort((a,b)=>(cmd?hDist(a.col,a.row,cmd.col,cmd.row):0)-(cmd?hDist(b.col,b.row,cmd.col,cmd.row):0));
-
   for(const u of myUnits){
     if(u.atked||u.hp<=0||cTeam!==team||isGameOver||!isAI[team])break;
     await aiAct(u,team);await delay(250);
@@ -846,7 +806,6 @@ async function aiAttacker(u,mr,at){
 }
 function findBestMoveAtk(u,mr){let bm=null,bp=-1;for(const k of mr){const[c,r]=k.split(',').map(Number);const s={c:u.col,r:u.row,m:u.rem};u.col=c;u.row=r;const at2=calcAtk(u);u.col=s.c;u.row=s.r;u.rem=s.m;if(at2.length>0){const p=at2.some(t=>t.type==='abatis')?10:at2.length;if(p>bp){bp=p;bm={c,r}}}}return{move:bm}}
 function findGoalAtk(u){const ecmd=units.find(x=>x.type==='commander'&&x.team!==u.team&&x.hp>0);let bd=1e9,g=null;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(MAP[r][c]==='Y'){const d=hDist(u.col,u.row,c,r);if(d<bd){bd=d;g={c,r}}}if(ecmd){const d=hDist(u.col,u.row,ecmd.col,ecmd.row);if(d<bd)g={c:ecmd.col,r:ecmd.row}}return g||{c:20,r:8}}
-
 async function aiDefender(u,mr,at){
   const ls = isLastStand(u.team);
   at=at.filter(t=>!(t.st&&t.team===u.team));
@@ -994,8 +953,6 @@ function findDefensiveMove(u,mr,cmd,enemy,ls){
   return b;
 }
 function findClosestMove(u,mr,goal){if(!goal)return null;let b=null,bd=hDist(u.col,u.row,goal.c,goal.r);for(const k of mr){const[c,r]=k.split(',').map(Number);const d=hDist(c,r,goal.c,goal.r);if(d<bd){bd=d;b={c,r}}}return b}
-
-
 // ===== モーダル・レポート =====
 let finalReportText = "";
 function showReport(winner, reason){
@@ -1028,18 +985,34 @@ function showReport(winner, reason){
 function copyReport(){
   navigator.clipboard.writeText(finalReportText).then(()=>{alert("クリップボードにコピーしました！")});
 }
-
 // ===== 地形編集 =====
 function paintH(c,r){if(MAP[r][c]===selTerr)return;undoSt.push({c,r,old:MAP[r][c]});MAP[r][c]=selTerr;dirty=true}
 function undoE(){if(!undoSt.length)return;const a=undoSt.pop();MAP[a.r][a.c]=a.old;dirty=true}
-function exportMap(){navigator.clipboard.writeText(JSON.stringify(MAP,null,2)).then(()=>alert('コピー済')).catch(()=>alert(JSON.stringify(MAP)))}
-function importMap(){const s=prompt('JSON:');if(!s)return;try{const d=JSON.parse(s);for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)MAP[r][c]=d[r][c];dirty=true;alert('OK')}catch(e){alert('失敗:'+e)}}
+function exportMap(){
+  const data={map:MAP,units:units.map(u=>({type:u.type,team:u.team,col:u.col,row:u.row}))};
+  navigator.clipboard.writeText(JSON.stringify(data,null,2)).then(()=>alert('地形＋配置をコピーしました')).catch(()=>alert(JSON.stringify(data)));
+}
+function importMap(){
+  const s=prompt('JSON（地形＋配置データ）:');if(!s)return;
+  try{
+    const d=JSON.parse(s);
+    // 新形式（map+units）と旧形式（配列のみ）の両方に対応
+    if(d.map){
+      for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)MAP[r][c]=d.map[r][c];
+      if(d.units&&Array.isArray(d.units)){
+        const mk=(type,team,col,row)=>{const t=UT[type];return{id:Math.random().toString(36).substr(2,9),type,team,col,row,hp:t.hp,maxHp:t.hp,atk:t.atk,range:t.range,energy:t.energy,rem:t.energy,atked:false,st:!!t.st}};
+        units=d.units.map(u=>mk(u.type,u.team,u.col,u.row));
+      }
+    } else if(Array.isArray(d)){
+      for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)MAP[r][c]=d[r][c];
+    }
+    dirty=true;alert('読み込み完了');
+  }catch(e){alert('失敗:'+e)}
+}
 function updPal(){document.querySelectorAll('.pal-btn').forEach(b=>b.classList.toggle('selected',b.dataset.code===selTerr))}
-
 // 起動
 const lg=$('legend');for(const[k,t]of Object.entries(TERRAIN)){const s=document.createElement('span');s.innerHTML=`<span class="chip" style="background:${t.color}"></span>${t.name}(${t.cost<0?'×':t.cost})`;lg.appendChild(s)}
 const eb=$('editor-bar');for(const[k,t]of Object.entries(TERRAIN)){const b=document.createElement('button');b.className='pal-btn'+(k===selTerr?' selected':'');b.style.background=t.color;b.dataset.code=k;b.title=t.name;b.onclick=()=>{selTerr=k;updPal()};eb.appendChild(b)}
-
 window.onload = () => {
   initGameData();
   setupUIForPhase();
